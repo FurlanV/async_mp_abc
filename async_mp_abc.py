@@ -1,10 +1,12 @@
 import os
 import random
 import asyncio
+import json
 import pandas as pd
 import numpy as np
 
 from scipy import stats
+from pandas import json_normalize
 from concurrent.futures import ThreadPoolExecutor
 from multiple_pulses import WrightFisherPopulation
 
@@ -105,50 +107,55 @@ class AsyncMpABC:
         
 
     async def concatenate_responses(self, no_pulses, populationPulses, m, parentalPopulations, founderPopulation, generations, firstChromosome, lastChromosome,sizePopulationObserved,sizePopulationSimulated, simulatorPath, observedDistribution, output):
-        results = await asyncio.gather( *(self.in_thread(self.execute_sample, x, populationPulses, m, parentalPopulations, founderPopulation, generations, firstChromosome, lastChromosome,sizePopulationObserved,sizePopulationSimulated, simulatorPath, observedDistribution, output) for x in range(50000) ))
+        results = await asyncio.gather( *(self.in_thread(self.execute_sample, x, populationPulses, m, parentalPopulations, founderPopulation, generations, firstChromosome, lastChromosome,sizePopulationObserved,sizePopulationSimulated, simulatorPath, observedDistribution, output) for x in range(10) ))
 
-        simulatedDistribution=pd.read_csv(results, sep="\t", header=None)
-        simulatedDistribution.columns=["Ancestry","Size","Individual","Chr"]
+        print(results)
+
+        data = json.loads(json.dumps(results[0]))
+
+        print(json_normalize(data))
+
+        #simulatedDistribution=pd.read_csv(results, sep="\t", header=None)
+        #simulatedDistribution.columns=["Ancestry","Size","Individual","Chr"]
          
         
         #Peform ks test for each ancestry
-        response = {}
+        #response = {}
         #response['pulse'] = pulse
-        response['populationPriori'] = populationPulses
-        response['mPriori'] = m
-        response['pvalue'] = {}
-        response['ds'] = {}
+        #response['populationPriori'] = populationPulses
+        #response['mPriori'] = m
+        #response['pvalue'] = {}
+        #response['ds'] = {}
 
-        for pop in parentalPopulations:
-            observedFiltered = observedDistribution.loc[observedDistribution["Ancestry"] == pop]
-            simulatedFiltered = simulatedDistribution.loc[simulatedDistribution["Ancestry"] == pop]
+        #for pop in parentalPopulations:
+        #    print(pop)
+        #    observedFiltered = observedDistribution.loc[observedDistribution["Ancestry"] == pop]
+        #    simulatedFiltered = simulatedDistribution.loc[simulatedDistribution["Ancestry"] == pop]
 
-            pvalueTemp,DTemp = self.compareDistribution(observedFiltered, simulatedFiltered)
+        #    pvalueTemp,DTemp = self.compareDistribution(observedFiltered, simulatedFiltered)
 
-            if pop in response['pvalue']:
-                current_pvalue = response['pvalue']
-                current_pvalue = response[pop].append(pvalueTemp)
-            else:
-                current_pvalue = response['pvalue']
-                current_pvalue[pop] = []
+        #    if pop in response['pvalue']:
+        #        current_pvalue = response['pvalue']
+        #        current_pvalue = response[pop].append(pvalueTemp)
+        #    else:
+        #        current_pvalue = response['pvalue']
+        #        current_pvalue[pop] = []
 
-            if pop in response['ds']:
-                current_pvalue = response['ds']
-                current_pvalue = response[pop].append(DTemp)
-            else:
-                current_pvalue = response['ds']
-                current_pvalue[pop] = []
+        #    if pop in response['ds']:
+        #        current_pvalue = response['ds']
+        #        current_pvalue = response[pop].append(DTemp)
+        #    else:
+        #        current_pvalue = response['ds']
+        #        current_pvalue[pop] = []
             
 
-        return response
+        #return response
 
     def run_async_model(self, numberOfPulses, simulatorPath, toSample, firstChromosome, lastChromosome, firstGeneration,sizePopulationObserved, sizePopulationSimulated, founderPopulation, observedFile, parentalPopulations, observedDistribution, output):
         
         loop = asyncio.get_event_loop()
         
         try:
-
-            
             #Observed Population Ancestry
             #M = self.calculatePopulationAncestry(observedFile, parentalPopulations)
     
@@ -172,15 +179,5 @@ if __name__ == "__main__":
 
     observedDistribution = pd.read_csv("Desenvolvimento.txt", sep="\t", header=None)
 
-    AsyncABC = AsyncMpABC(20)
-    abc_simulation = AsyncABC.run_async_model(5, "python multiple_pulses.py", 50000, 22, 22, 20, 10000, 100, "NAT", "Desenvolvimento.txt", parental, observedDistribution, "DesenvolvimentoOutSimulatedData")
-    
-    print(abc_simulation)
-
-
-'''
---parental AFR NAT EUR --numberOfPulses 5 
-#--output DesenvolvimentoOut --input Desenvolvimento.txt --founder NAT --numberOfIndividuals 100 
-#--sizePop 10000 --firstGeneration 20 --firstChromosome 22 --lastChromosome 22 --mode 1 --sample 50000 
-#--simulator "python multiple_pulses.py" --color blue darkgreen red
-'''
+    AsyncABC = AsyncMpABC(10)
+    abc_simulation = AsyncABC.run_async_model(5, "python multiple_pulses.py", 50000, 18, 22, 16, 10000, 100, "NAT", "Desenvolvimento.txt", parental, observedDistribution, "DesenvolvimentoOutSimulatedData")
