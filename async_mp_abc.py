@@ -13,7 +13,7 @@ from multiple_pulses import WrightFisherPopulation
 
 class AsyncMpABC:
 
-    def __init__(self, workers=22):
+    def __init__(self, workers=30):
         self._executor = ThreadPoolExecutor(workers)
         self.response = []
 
@@ -130,7 +130,7 @@ class AsyncMpABC:
         return self.executeCommand(pulse, numberOfPulses, parentalPopulations, founderPopulation, generations, firstChromosome, lastChromosome, sizePopulationObserved, sizePopulationSimulated, simulatorPath, observedDistribution, output)
 
     async def concatenate_responses(self, numberOfPulses, parentalPopulations, founderPopulation, generations, firstChromosome, lastChromosome, sizePopulationObserved, sizePopulationSimulated, simulatorPath, observedDistribution, output):
-        await asyncio.gather(*(self.in_thread(self.execute_sample, x, numberOfPulses, parentalPopulations, founderPopulation, generations, firstChromosome, lastChromosome, sizePopulationObserved, sizePopulationSimulated, simulatorPath, observedDistribution, output) for x in range(5)) )
+        await asyncio.gather(*(self.in_thread(self.execute_sample, x, numberOfPulses, parentalPopulations, founderPopulation, generations, firstChromosome, lastChromosome, sizePopulationObserved, sizePopulationSimulated, simulatorPath, observedDistribution, output) for x in range(1000)) )
         
         return self.response
         #print(results)
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     observedDistribution = pd.read_csv(
         "Desenvolvimento.txt", sep="\t", header=None)
 
-    AsyncABC = AsyncMpABC(10)
+    AsyncABC = AsyncMpABC(50)
     abc_simulation = AsyncABC.run_async_model(numberOfPulses=5,
                                               simulatorPath="python multiple_pulses.py",
                                               toSample=50000,
